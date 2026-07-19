@@ -26,13 +26,16 @@ product_features_view = FeatureView(
     entities=[product_entity],
     ttl=timedelta(days=3650),
     schema=[
+        # Engineered features
         Field(name="click_to_purchase_ratio", dtype=Float64),
         Field(name="price_bracket", dtype=Int64),
         Field(name="brand_popularity", dtype=Float64),
         Field(name="quality_score", dtype=Float64),
-        Field(name="rating", dtype=Float64),
-        Field(name="sentiment_score", dtype=Float64),
-        Field(name="price", dtype=Float64),
+        # Raw Kaggle columns (actual names from dataset)
+        Field(name="Rating of the product", dtype=Float64),
+        Field(name="Customer review sentiment score (overall)", dtype=Float64),
+        Field(name="Price of the product", dtype=Float64),
+        Field(name="Probability for the product to be recommended to the person", dtype=Float64),
     ],
     online=True,
     source=product_features_source,

@@ -131,7 +131,9 @@ def _engineer_product_features(df: pd.DataFrame) -> pd.DataFrame:
         features['brand_popularity'] = 0.0
 
     # quality_score
-    rating_col = next((cols[k] for k in cols if 'rating' in k and 'similar' not in k and 'avg' not in k.lower()), None)
+    rating_col = next((cols[k] for k in cols if 'rating of' in k), None)
+    if not rating_col:
+        rating_col = next((cols[k] for k in cols if 'rating' in k and 'similar' not in k and 'avg' not in k.lower()), None)
     sentiment_col = next((cols[k] for k in cols if 'sentiment' in k), None)
     if rating_col and sentiment_col:
         features['quality_score'] = features[rating_col] * 0.7 + features[sentiment_col] * 0.3
@@ -147,6 +149,17 @@ def _engineer_product_features(df: pd.DataFrame) -> pd.DataFrame:
         features['seasonal_demand'] = features[season_col].astype(str) + '_' + features[holiday_col].astype(str)
     else:
         features['seasonal_demand'] = '0_0'
+
+    # ── Clean aliases for model training and Feast compatibility ──
+    # Map verbose Kaggle column names → short, model-friendly names
+    alias_map = {
+        'rating': rating_col,
+        'sentiment_score': sentiment_col,
+        'price': price_col,
+    }
+    for alias, src_col in alias_map.items():
+        if src_col and alias not in features.columns:
+            features[alias] = features[src_col]
 
     logger.info(f"  Product features: {features.shape} ({len(features.columns)} columns)")
     return features
