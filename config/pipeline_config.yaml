@@ -1,0 +1,61 @@
+# ============================================================
+# RecoMart Pipeline Configuration
+# ============================================================
+
+project:
+  name: "RecoMart Recommendation Pipeline"
+  version: "1.0.0"
+
+paths:
+  base_dir: "."
+  raw_kaggle: "data/raw/kaggle/product_recommendations"
+  raw_api: "data/raw/generated/user_interactions"
+  validated: "data/validated"
+  prepared: "data/prepared"
+  features: "data/features"
+  reports: "reports"
+  eda_plots: "reports/eda_plots"
+  logs: "logs"
+  models: "models"
+  warehouse: "data/warehouse.db"
+  versioning: "data/versioning"
+  feast:
+    repo_path: "src/feature_store"
+    registry: "data/feast/registry.db"
+    online_store: "data/feast/online_store.db"
+
+ingestion:
+  kaggle_dataset: "kartikeybartwal/ecomerce-product-recommendation-dataset"
+  num_synthetic_users: 200
+  num_synthetic_interactions: 5000
+  retry_attempts: 3
+  retry_delay_seconds: 2
+
+validation:
+  rating_min: 0.0
+  rating_max: 5.0
+  price_min: 0.0
+  max_missing_pct: 30.0
+  max_duplicate_pct: 10.0
+
+preparation:
+  numerical_scaler: "minmax"
+  test_size: 0.2
+  random_state: 42
+
+model:
+  svd:
+    n_factors: 50
+    n_epochs: 20
+    lr_all: 0.005
+    reg_all: 0.02
+  content_based:
+    algorithm: "gradient_boosting"
+    n_estimators: 100
+    max_depth: 6
+  evaluation:
+    k_values: [5, 10]
+
+mlflow:
+  tracking_uri: "mlruns"
+  experiment_name: "recomart_recommendations"
