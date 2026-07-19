@@ -50,5 +50,6 @@ logs/
 # Jupyter
 .ipynb_checkpoints/
 
-# Feast
+# Feast runtime artifacts
 data/feast/
+registry.db
