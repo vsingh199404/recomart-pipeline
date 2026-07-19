@@ -3,9 +3,10 @@ from datetime import timedelta
 from feast import Entity, FeatureView, Field, FileSource, ValueType
 from feast.types import Float64, Int64
 
-PROJECT_ROOT = "i:/projects/recomart-pipeline"
-PRODUCT_FEATURES_PATH = os.path.join(PROJECT_ROOT, "data/features/product_features.parquet")
-USER_FEATURES_PATH = os.path.join(PROJECT_ROOT, "data/features/user_features.parquet")
+# Dynamically resolve project root from this file's location (portable across machines)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+PRODUCT_FEATURES_PATH = os.path.join(PROJECT_ROOT, "data", "features", "product_features.parquet")
+USER_FEATURES_PATH = os.path.join(PROJECT_ROOT, "data", "features", "user_features.parquet")
 
 product_entity = Entity(name="product_id", value_type=ValueType.INT64)
 user_entity = Entity(name="user_id", value_type=ValueType.INT64)
