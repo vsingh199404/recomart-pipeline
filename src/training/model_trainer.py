@@ -12,6 +12,12 @@ import numpy as np
 import pandas as pd
 import mlflow
 
+
+def _build_tracking_uri(db_path: str) -> str:
+    """Return a Windows-safe SQLite URI for MLflow tracking."""
+    normalized_path = os.path.abspath(db_path).replace("\\", "/")
+    return f"sqlite:///{normalized_path}"
+
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
@@ -184,18 +190,17 @@ def _train_collaborative_filtering(config, feature_paths, model_dir):
             'cf_mae': float(np.mean(cv_results['test_mae'])),
         }
 
-        # Train on full dataset
-        trainset = data.build_full_trainset()
+        from surprise.model_selection import train_test_split as surprise_train_test_split
+        trainset, testset = surprise_train_test_split(data, test_size=0.2, random_state=42)
+        
+        # Fit on trainset and evaluate ranking on testset
         algo.fit(trainset)
-
-        # Ranking metrics on anti-testset
-        testset = trainset.build_anti_testset()
-        sample_size = min(len(testset), 5000)
-        random.seed(42)
-        test_sample = random.sample(testset, sample_size)
-        predictions = algo.test(test_sample)
-
+        predictions = algo.test(testset)
         ranking = _compute_ranking_metrics(predictions, k=10)
+
+        # Retrain on full dataset before saving
+        full_trainset = data.build_full_trainset()
+        algo.fit(full_trainset)
         metrics.update({f'cf_{k}': v for k, v in ranking.items()})
 
         logger.info(f"  Metrics: RMSE={metrics['cf_rmse']:.4f}, MAE={metrics['cf_mae']:.4f}")
@@ -244,8 +249,9 @@ def train_models(config, prepared_paths, feature_paths):
     # Setup MLflow (using SQLite backend — required for MLflow 3.x+)
     mlflow_cfg = config.get('mlflow', {})
     mlflow_db_path = os.path.abspath('mlflow.db')
-    tracking_uri = f"sqlite:///{mlflow_db_path}"
+    tracking_uri = _build_tracking_uri(mlflow_db_path)
 
+    os.environ.setdefault("MLFLOW_TRACKING_URI", tracking_uri)
     mlflow.set_tracking_uri(tracking_uri)
     experiment_name = mlflow_cfg.get('experiment_name', 'recomart_recommendations')
     mlflow.set_experiment(experiment_name)

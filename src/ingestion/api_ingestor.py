@@ -55,16 +55,28 @@ def ingest_api_data(config: Dict[str, Any], product_data_path: Optional[str] = N
             np.random.seed(42)
 
             users = [f"U{str(i).zfill(3)}" for i in range(1, num_users + 1)]
+            # Create skewed probability distributions for users and products
+            user_probs = np.array([1.0 / (i + 1) for i in range(num_users)])
+            user_probs /= user_probs.sum()
+            
+            prod_probs = np.array([1.0 / (i + 1) for i in range(num_products)])
+            prod_probs /= prod_probs.sum()
+
             actions = ['view', 'click', 'purchase', 'rate']
-            action_weights = [0.45, 0.30, 0.12, 0.13]
+            action_weights = [0.25, 0.25, 0.25, 0.25]  # Higher chance of rating/purchase
 
             end_time = datetime.now()
             start_time = end_time - timedelta(days=90)
             time_range = int((end_time - start_time).total_seconds())
 
+            # Pre-select users and products using numpy for speed
+            sampled_users = np.random.choice(users, size=num_interactions, p=user_probs)
+            sampled_products = np.random.choice(num_products, size=num_interactions, p=prod_probs)
+            sampled_actions = random.choices(actions, weights=action_weights, k=num_interactions)
+            
             records = []
-            for _ in range(num_interactions):
-                action = random.choices(actions, weights=action_weights, k=1)[0]
+            for i in range(num_interactions):
+                action = sampled_actions[i]
 
                 # Rating only for 'rate' and 'purchase' actions
                 rating = None
@@ -76,8 +88,8 @@ def ingest_api_data(config: Dict[str, Any], product_data_path: Optional[str] = N
                 timestamp = start_time + timedelta(seconds=random.randint(0, time_range))
 
                 records.append({
-                    'user_id': random.choice(users),
-                    'product_id': random.randint(0, num_products - 1),
+                    'user_id': sampled_users[i],
+                    'product_id': sampled_products[i],
                     'action_type': action,
                     'rating': rating,
                     'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S')

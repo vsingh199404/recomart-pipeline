@@ -27,7 +27,7 @@ paths:
 ingestion:
   kaggle_dataset: "kartikeybartwal/ecomerce-product-recommendation-dataset"
   num_synthetic_users: 200
-  num_synthetic_interactions: 5000
+  num_synthetic_interactions: 25000
   retry_attempts: 3
   retry_delay_seconds: 2
 
