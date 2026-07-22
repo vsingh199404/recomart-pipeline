@@ -29,8 +29,8 @@ def get_logger(name: str, log_dir: str = "logs") -> logging.Logger:
 
     logger.setLevel(logging.DEBUG)
 
-    # File handler — logs everything to pipeline.log
-    log_file = os.path.join(log_dir, "pipeline.log")
+    # File handler — logs everything to pipline.logs
+    log_file = os.path.join(log_dir, "pipline.logs")
     file_handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)
 
